@@ -2,12 +2,12 @@ import { useState, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, History, Filter, TrendingUp, ArrowRight, Zap } from 'lucide-react';
-import { TimerSession, Project } from '@/types';
+import { type TimerSession, type Project } from '@/types';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { AnalyticsFilters } from './AnalyticsFilters';
 import { DateRangePicker } from './DateRangePicker';
 import { format, isToday, isYesterday, isThisWeek, isWithinInterval, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
-import { DateRange } from "react-day-picker";
+import { type DateRange } from "react-day-picker";
 import { seedMockData } from '@/utils/mockData';
 
 type ViewPeriod = 'daily' | 'weekly' | 'monthly' | 'custom';

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuth } from '../../contexts/AuthContext'
+import { useNavigation } from 'react-router'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
@@ -7,47 +7,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Alert, AlertDescription } from '../ui/alert'
 import { Loader2 } from 'lucide-react'
 
-export function SignUpForm() {
+export function SignUpForm({ error, success }: { error?: string | null; success?: string | null }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-  const { signUp } = useAuth()
+  const navigation = useNavigation()
+  const loading = navigation.state === 'submitting'
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    setSuccess(null)
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
+  const handleSubmit = (e: React.FormEvent) => {
+    const form = e.currentTarget as HTMLFormElement
+    // client-side only validation; server revalidates too
+    const formData = new FormData(form)
+    const pwd = String(formData.get('password') ?? '')
+    const cpwd = String(formData.get('confirmPassword') ?? '')
+    if (pwd !== cpwd) {
+      e.preventDefault()
+      alert('Passwords do not match')
       return
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      setLoading(false)
-      return
-    }
-
-    try {
-      const { error } = await signUp(email, password)
-      if (error) {
-        setError(error.message)
-      } else {
-        setSuccess('Check your email for a confirmation link!')
-        setEmail('')
-        setPassword('')
-        setConfirmPassword('')
-      }
-    } catch (err) {
-      setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -60,24 +36,26 @@ export function SignUpForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
+        <form method="post" onSubmit={handleSubmit} className="space-y-4">
+          <input type="hidden" name="intent" value="signup" />
+          {error ? (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
-          )}
+          ) : null}
           
-          {success && (
+          {success ? (
             <Alert>
               <AlertDescription>{success}</AlertDescription>
             </Alert>
-          )}
+          ) : null}
           
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
+              name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
@@ -91,6 +69,7 @@ export function SignUpForm() {
             <Input
               id="password"
               type="password"
+              name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
@@ -104,6 +83,7 @@ export function SignUpForm() {
             <Input
               id="confirmPassword"
               type="password"
+              name="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm your password"

@@ -4,6 +4,8 @@ import { ProjectSelector } from '@/components/ProjectSelector';
 import { Analytics } from '@/components/Analytics';
 import { Sessions } from '@/components/Sessions';
 import { Settings } from '@/components/Settings';
+import { TimerCompleteModal } from '@/components/TimerCompleteModal';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Timer as TimerIcon, BarChart3, Settings as SettingsIcon, History } from 'lucide-react';
 import { useTimer } from '@/hooks/useTimer';
@@ -17,6 +19,10 @@ const Index = () => {
     resetTimer,
     switchSession,
     setCurrentProject,
+    showCompleteModal,
+    nextSessionType,
+    closeCompleteModal,
+    startNextSession,
   } = useTimer();
 
   return (
@@ -29,7 +35,7 @@ const Index = () => {
               <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
                 P
               </div>
-              <h1 className="text-xl font-semibold">TikoTocka</h1>
+              <h1 className="text-xl font-semibold">Pomodoro Focus</h1>
             </div>
             
             <div className="flex items-center gap-2">
@@ -106,6 +112,16 @@ const Index = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Timer Complete Modal */}
+      <TimerCompleteModal
+        isOpen={showCompleteModal}
+        onClose={closeCompleteModal}
+        sessionType={timerState.sessionType}
+        nextSessionType={nextSessionType}
+        onStartNext={startNextSession}
+        completedFocusCount={timerState.completedFocusCount}
+      />
     </div>
   );
 };

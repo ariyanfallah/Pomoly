@@ -1,360 +1,266 @@
-import { useState, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, History, Filter, TrendingUp, ArrowRight, Zap } from 'lucide-react';
-import { type TimerSession, type Project } from '@/types';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { AnalyticsFilters } from './AnalyticsFilters';
-import { DateRangePicker } from './DateRangePicker';
-import { format, isToday, isYesterday, isThisWeek, isWithinInterval, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
-import { type DateRange } from "react-day-picker";
-import { seedMockData } from '@/utils/mockData';
-
-type ViewPeriod = 'daily' | 'weekly' | 'monthly' | 'custom';
+import { ManualSessionEntry } from '@/components/ManualSessionEntry';
+import { Clock, Target, Coffee, Calendar, Trash2, Edit3 } from 'lucide-react';
+import { format, parseISO, startOfDay } from 'date-fns';
+import { useSessions, DatabaseSession } from '@/hooks/useSessions';
+import { useProjects } from '@/hooks/useProjects';
+import { SessionType } from '@/types';
+import { cn } from '@/lib/utils';
 
 export function Sessions() {
-  const [sessions, setSessions] = useLocalStorage<TimerSession[]>('pomodoroSessions', []);
-  const [projects, setProjects] = useLocalStorage<Project[]>('pomodoroProjects', []);
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [viewPeriod, setViewPeriod] = useState<ViewPeriod>('weekly');
-  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
+  const { sessions, loading, deleteSession, refetch } = useSessions();
+  const { projects, loading: projectsLoading } = useProjects();
 
-  // Auto-load mock data if no sessions exist
-  useEffect(() => {
-    if (sessions.length === 0 && projects.length === 0) {
-      seedMockData();
-      const newProjects = JSON.parse(localStorage.getItem('pomodoroProjects') || '[]');
-      const newSessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '[]');
-      setProjects(newProjects);
-      setSessions(newSessions);
-    }
-  }, [sessions.length, projects.length, setProjects, setSessions]);
-
-  const getDateRange = (): { start: Date; end: Date } => {
-    const now = new Date();
-    
-    switch (viewPeriod) {
-      case 'daily':
-        return {
-          start: startOfDay(now),
-          end: endOfDay(now)
-        };
-      case 'weekly':
-        return {
-          start: startOfWeek(now),
-          end: endOfWeek(now)
-        };
-      case 'monthly':
-        return {
-          start: startOfMonth(now),
-          end: endOfMonth(now)
-        };
-      case 'custom':
-        if (customDateRange?.from && customDateRange?.to) {
-          return {
-            start: startOfDay(customDateRange.from),
-            end: endOfDay(customDateRange.to)
-          };
-        }
-        // Fallback to last 30 days if no custom range selected
-        return {
-          start: startOfDay(subDays(now, 30)),
-          end: endOfDay(now)
-        };
+  const getSessionIcon = (type: SessionType) => {
+    switch (type) {
+      case 'focus':
+        return Target;
+      case 'shortBreak':
+      case 'longBreak':
+        return Coffee;
       default:
-        return {
-          start: startOfWeek(now),
-          end: endOfWeek(now)
-        };
+        return Clock;
     }
   };
 
-  const filteredSessions = useMemo(() => {
-    let filtered = sessions.filter(session => session.type === 'focus');
-    
-    // Filter by project
-    if (selectedProject) {
-      filtered = filtered.filter(session => session.projectId === selectedProject);
-    }
-    
-    // Filter by date range
-    const { start, end } = getDateRange();
-    filtered = filtered.filter(session => {
-      const sessionDate = new Date(session.completedAt);
-      return isWithinInterval(sessionDate, { start, end });
-    });
-    
-    return filtered.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
-  }, [sessions, selectedProject, viewPeriod, customDateRange]);
-
-  const getProjectName = (projectId: string): string => {
-    const project = projects.find(p => p.id === projectId);
-    return project?.name || 'Unknown Project';
-  };
-
-  const getProjectColor = (projectId: string): string => {
-    const project = projects.find(p => p.id === projectId);
-    return project?.color || 'hsl(var(--muted))';
-  };
-
-  const formatTime = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
-
-  const formatSessionDate = (date: Date): string => {
-    if (isToday(date)) {
-      return `Today, ${format(date, 'h:mm a')}`;
-    } else if (isYesterday(date)) {
-      return `Yesterday, ${format(date, 'h:mm a')}`;
-    } else if (isThisWeek(date)) {
-      return format(date, 'EEEE, h:mm a');
-    } else {
-      return format(date, 'MMM d, h:mm a');
+  const getSessionColor = (type: SessionType) => {
+    switch (type) {
+      case 'focus':
+        return 'text-emerald-600 bg-emerald-100 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950 dark:border-emerald-800';
+      case 'shortBreak':
+        return 'text-blue-600 bg-blue-100 border-blue-200 dark:text-blue-400 dark:bg-blue-950 dark:border-blue-800';
+      case 'longBreak':
+        return 'text-purple-600 bg-purple-100 border-purple-200 dark:text-purple-400 dark:bg-purple-950 dark:border-purple-800';
+      default:
+        return 'text-gray-600 bg-gray-100 border-gray-200 dark:text-gray-400 dark:bg-gray-950 dark:border-gray-800';
     }
   };
 
-  const groupedSessions = useMemo(() => {
-    const groups: { [key: string]: TimerSession[] } = {};
+  const formatDuration = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
+  const formatSessionType = (type: SessionType): string => {
+    switch (type) {
+      case 'focus':
+        return 'Focus Session';
+      case 'shortBreak':
+        return 'Short Break';
+      case 'longBreak':
+        return 'Long Break';
+      default:
+        return 'Session';
+    }
+  };
+
+  // Group sessions by date
+  const groupedSessions = sessions.reduce((groups, session) => {
+    const date = startOfDay(parseISO(session.completed_at));
+    const dateKey = date.toISOString();
     
-    filteredSessions.forEach(session => {
-      const date = new Date(session.completedAt);
-      let key: string;
-      
-      if (isToday(date)) {
-        key = 'Today';
-      } else if (isYesterday(date)) {
-        key = 'Yesterday';
-      } else if (isThisWeek(date)) {
-        key = format(date, 'EEEE');
-      } else {
-        key = format(date, 'MMM d, yyyy');
-      }
-      
-      if (!groups[key]) {
-        groups[key] = [];
-      }
-      groups[key].push(session);
-    });
+    if (!groups[dateKey]) {
+      groups[dateKey] = {
+        date,
+        sessions: [],
+      };
+    }
     
+    groups[dateKey].sessions.push(session);
     return groups;
-  }, [filteredSessions]);
+  }, {} as Record<string, { date: Date; sessions: DatabaseSession[] }>);
 
-  const totalFocusTime = filteredSessions.reduce((total, session) => total + Math.floor(session.duration / 60), 0);
-  const totalSessions = filteredSessions.length;
+  const sortedGroups = Object.values(groupedSessions).sort((a, b) => 
+    b.date.getTime() - a.date.getTime()
+  );
 
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-100 to-blue-100">
-            <History className="h-5 w-5 text-emerald-600" />
-          </div>
+  if (loading || projectsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold">Focus Sessions</h2>
-            <p className="text-sm text-muted-foreground">Track your productivity journey</p>
+            <h2 className="text-2xl font-semibold text-foreground">Session History</h2>
+            <p className="text-muted-foreground">Track your completed work sessions</p>
           </div>
         </div>
-        
-        <div className="flex items-center gap-3 flex-wrap">
-          <AnalyticsFilters 
-            projects={projects}
-            selectedProject={selectedProject}
-            onProjectChange={setSelectedProject}
-          />
-          
-          <div className="flex rounded-xl bg-secondary p-1">
-            {(['daily', 'weekly', 'monthly', 'custom'] as ViewPeriod[]).map((period) => (
-              <Button
-                key={period}
-                variant={viewPeriod === period ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewPeriod(period)}
-                className="capitalize transition-smooth"
-              >
-                {period}
-              </Button>
-            ))}
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground mt-2">Loading sessions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (sessions.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-foreground">Session History</h2>
+            <p className="text-muted-foreground">Track your completed work sessions</p>
           </div>
-          
-          {viewPeriod === 'custom' && (
-            <DateRangePicker
-              dateRange={customDateRange}
-              onDateRangeChange={setCustomDateRange}
+          {projects.length > 0 && (
+            <ManualSessionEntry 
+              projects={projects} 
+              onSessionAdded={refetch}
             />
           )}
         </div>
-      </div>
-
-      {/* Enhanced Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6 shadow-soft border-0 bg-gradient-to-br from-card to-primary-light/30 group hover:shadow-luxury transition-luxury">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-primary text-primary-foreground transition-smooth group-hover:scale-105 group-hover:rotate-3">
-              <Clock className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-muted-foreground">Total Focus Time</p>
-              <p className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {formatTime(totalFocusTime)}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" />
-                {selectedProject ? getProjectName(selectedProject) : 'All Projects'}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 shadow-soft border-0 bg-gradient-to-br from-card to-accent-light/30 group hover:shadow-luxury transition-luxury">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-accent text-accent-foreground transition-smooth group-hover:scale-105 group-hover:rotate-3">
-              <Zap className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-muted-foreground">Sessions Completed</p>
-              <p className="text-2xl font-bold">{totalSessions}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {viewPeriod === 'custom' && customDateRange?.from && customDateRange?.to ? 
-                  `${format(customDateRange.from, 'MMM d')} - ${format(customDateRange.to, 'MMM d')}` :
-                  `This ${viewPeriod.replace('ly', '')}`
-                }
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 shadow-soft border-0 bg-gradient-to-br from-card to-blue-100/30 group hover:shadow-luxury transition-luxury">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-blue-600 text-white transition-smooth group-hover:scale-105 group-hover:rotate-3">
-              <Filter className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-muted-foreground">Average Session</p>
-              <p className="text-2xl font-bold">
-                {totalSessions > 0 ? formatTime(Math.floor(totalFocusTime / totalSessions)) : '0m'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">Per session</p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Enhanced Sessions List */}
-      <Card className="shadow-soft border-0 overflow-hidden">
-        <div className="p-6 border-b border-border bg-gradient-to-r from-primary/5 to-accent/5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold flex items-center gap-2">
-                <History className="h-4 w-4" />
-                Session Timeline
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {selectedProject ? `Sessions for ${getProjectName(selectedProject)}` : 'All focus sessions'} 
-                {viewPeriod === 'custom' && customDateRange?.from && customDateRange?.to && 
-                  ` from ${format(customDateRange.from, 'MMM d')} to ${format(customDateRange.to, 'MMM d')}`
-                }
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-medium text-muted-foreground">
-                {totalSessions} sessions
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {formatTime(totalFocusTime)} total
-              </div>
-            </div>
-          </div>
-        </div>
         
-        <div className="max-h-[500px] overflow-y-auto">
-          {Object.keys(groupedSessions).length > 0 ? (
-            Object.entries(groupedSessions).map(([dateGroup, sessionGroup]) => (
-              <div key={dateGroup} className="border-b border-border/50 last:border-0">
-                <div className="p-4 bg-gradient-to-r from-muted/20 to-muted/10 sticky top-0 z-10 backdrop-blur-sm">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-foreground flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      {dateGroup}
-                    </h4>
-                    <div className="text-sm text-muted-foreground bg-card px-2 py-1 rounded-md">
-                      {sessionGroup.length} session{sessionGroup.length !== 1 ? 's' : ''}
-                    </div>
-                  </div>
+        <Card className="text-center py-12">
+          <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+            <Clock className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground mb-2">No sessions yet</h3>
+          <p className="text-muted-foreground mb-4">
+            Start a timer session or add a manual entry to see your work history.
+          </p>
+          {projects.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Create a project first to start tracking sessions.
+            </p>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold text-foreground">Session History</h2>
+          <p className="text-muted-foreground">Track your completed work sessions</p>
+        </div>
+        {projects.length > 0 && (
+          <ManualSessionEntry 
+            projects={projects} 
+            onSessionAdded={refetch}
+          />
+        )}
+      </div>
+
+      <div className="relative">
+        {/* Timeline line */}
+        <div className="absolute left-8 top-6 bottom-0 w-0.5 bg-gradient-to-b from-primary/40 via-border to-transparent"></div>
+        
+        <div className="space-y-8">
+          {sortedGroups.map((group, groupIndex) => (
+            <div key={group.date.toISOString()} className="relative">
+              {/* Date node */}
+              <div className="flex items-center gap-4 mb-4">
+                <div className="relative z-10 w-16 h-16 rounded-full bg-card border-2 border-primary/20 flex items-center justify-center shadow-soft animate-fade-in">
+                  <Calendar className="h-6 w-6 text-primary" />
                 </div>
-                <div className="divide-y divide-border/30">
-                  {sessionGroup.map((session, index) => (
-                    <div key={session.id} className="group/session p-4 hover:bg-gradient-to-r hover:from-primary/5 hover:to-accent/5 transition-all duration-300">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4 flex-1 min-w-0">
-                          {/* Project indicator with animation */}
-                          <div className="relative">
-                            <div 
-                              className="w-5 h-5 rounded-full flex-shrink-0 transition-all duration-300 group-hover/session:scale-110 shadow-sm"
-                              style={{ 
-                                backgroundColor: getProjectColor(session.projectId),
-                                boxShadow: `0 0 0 2px ${getProjectColor(session.projectId)}20`
-                              }}
-                            />
-                            <div 
-                              className="absolute inset-0 w-5 h-5 rounded-full animate-ping opacity-20"
-                              style={{ backgroundColor: getProjectColor(session.projectId) }}
-                            />
+                <div>
+                  <h3 className="font-medium text-foreground">
+                    {format(group.date, 'EEEE, MMMM d')}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {group.sessions.length} session{group.sessions.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+
+              {/* Session cards */}
+              <div className="ml-20 space-y-3">
+                {group.sessions.map((session, sessionIndex) => {
+                  const SessionIcon = getSessionIcon(session.type);
+                  const project = projects.find(p => p.id === session.project_id) || session.projects;
+                  
+                  return (
+                    <Card 
+                      key={session.id}
+                      className={cn(
+                        "p-4 shadow-soft border-l-4 hover:shadow-md transition-shadow animate-fade-in hover-scale",
+                        session.type === 'focus' 
+                          ? 'border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20' 
+                          : session.type === 'shortBreak'
+                          ? 'border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20'
+                          : 'border-l-purple-500 bg-purple-50/50 dark:bg-purple-950/20'
+                      )}
+                      style={{ 
+                        animationDelay: `${(groupIndex * 100) + (sessionIndex * 50)}ms` 
+                      }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className={cn(
+                            "w-10 h-10 rounded-full flex items-center justify-center",
+                            getSessionColor(session.type)
+                          )}>
+                            <SessionIcon className="h-5 w-5" />
                           </div>
                           
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-1">
-                              <span className="font-semibold truncate group-hover/session:text-primary transition-colors">
-                                {getProjectName(session.projectId)}
-                              </span>
-                              <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
-                                <Clock className="h-3 w-3" />
-                                {formatTime(Math.floor(session.duration / 60))}
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline" className={getSessionColor(session.type)}>
+                                {formatSessionType(session.type)}
+                              </Badge>
+                              {session.is_manual && (
+                                <Badge variant="secondary" className="text-xs">
+                                  <Edit3 className="h-3 w-3 mr-1" />
+                                  Manual
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            {project && (
+                              <div className="flex items-center gap-2 mb-2">
+                                <div 
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: project.color }}
+                                />
+                                <span className="text-sm font-medium text-foreground">
+                                  {project.name}
+                                </span>
+                              </div>
+                            )}
+                            
+                            <div className="text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-4 w-4" />
+                                <span>{formatDuration(session.duration)}</span>
+                                <span className="mx-2">•</span>
+                                <span>
+                                  {format(parseISO(session.started_at), 'h:mm a')} - {format(parseISO(session.completed_at), 'h:mm a')}
+                                </span>
                               </div>
                             </div>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {formatSessionDate(new Date(session.completedAt))}
-                            </p>
+                            
+                            {session.notes && (
+                              <p className="text-sm text-muted-foreground mt-2 italic">
+                                "{session.notes}"
+                              </p>
+                            )}
                           </div>
                         </div>
                         
-                        <div className="text-right">
-                          <div className="flex items-center gap-1 text-sm font-mono text-muted-foreground group-hover/session:text-foreground transition-colors">
-                            <ArrowRight className="h-3 w-3" />
-                            {format(new Date(session.completedAt), 'h:mm a')}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Session #{sessionGroup.length - index}
-                          </div>
-                        </div>
+                        {session.is_manual && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteSession(session.id)}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    </Card>
+                  );
+                })}
               </div>
-            ))
-          ) : (
-            <div className="p-16 text-center">
-              <div className="relative mb-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 mx-auto flex items-center justify-center">
-                  <History className="h-8 w-8 text-primary" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-accent rounded-full flex items-center justify-center">
-                  <span className="text-xs font-bold text-accent-foreground">0</span>
-                </div>
-              </div>
-              <p className="font-medium text-muted-foreground mb-2">
-                {selectedProject ? 'No sessions for this project' : 'No focus sessions yet'}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {selectedProject ? 'Try selecting a different project or start a new session' : 'Start your first focus session to see it here'}
-              </p>
             </div>
-          )}
+          ))}
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

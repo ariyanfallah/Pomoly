@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { type Project } from '@/types';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Project } from '@/types';
 
 interface AnalyticsFiltersProps {
   projects: Project[];

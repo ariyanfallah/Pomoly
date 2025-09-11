@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Flame } from 'lucide-react';
-import { type TimerSession } from '@/types';
+import { TimerSession } from '@/types';
 
 interface AnalyticsStreakCardProps {
   sessions: TimerSession[];

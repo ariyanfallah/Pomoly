@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, RotateCcw } from 'lucide-react';
-import { type SessionType } from '@/types';
+import { SessionType } from '@/types';
 
 interface TimerProps {
   timeLeft: number;

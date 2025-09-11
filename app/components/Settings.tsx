@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { type TimerSettings } from '@/types';
+import { TimerSettings } from '@/types';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 const defaultSettings: TimerSettings = {

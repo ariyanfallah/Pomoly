@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Coffee, Target, Timer } from 'lucide-react';
-import { SessionType } from '@/types';
+import type { SessionType } from '@/types';
 
 interface TimerCompleteModalProps {
   isOpen: boolean;

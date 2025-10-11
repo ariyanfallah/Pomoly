@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { ManualSessionEntry } from '@/components/ManualSessionEntry';
 import { Clock, Target, Coffee, Calendar, Trash2, Edit3 } from 'lucide-react';
 import { format, parseISO, startOfDay } from 'date-fns';
-import { useSessions, DatabaseSession } from '@/hooks/useSessions';
+import { useSessions, type DatabaseSession } from '@/hooks/useSessions';
 import { useProjects } from '@/hooks/useProjects';
-import { SessionType } from '@/types';
+import type { SessionType } from '@/types';
 import { cn } from '@/lib/utils';
 
 export function Sessions() {

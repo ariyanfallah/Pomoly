@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '../integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Project } from '@/types';
 
-export interface Project {
+interface DatabaseProject {
   id: string;
   name: string;
   color: string;
@@ -36,7 +37,12 @@ export function useProjects() {
         return;
       }
 
-      setProjects(data || []);
+      setProjects((data || []).map((p: DatabaseProject) => ({
+        id: p.id,
+        name: p.name,
+        color: p.color,
+        createdAt: new Date(p.created_at),
+      })));
     } catch (error) {
       console.error('Error fetching projects:', error);
     } finally {
@@ -76,7 +82,12 @@ export function useProjects() {
         return null;
       }
 
-      setProjects(prev => [...prev, data]);
+      setProjects(prev => [...prev, {
+        id: data.id,
+        name: data.name,
+        color: data.color,
+        createdAt: new Date(data.created_at),
+      }]);
       toast({
         title: 'Project Created',
         description: `Created project "${name}".`,
@@ -89,7 +100,7 @@ export function useProjects() {
     }
   };
 
-  const updateProject = async (id: string, updates: Partial<Pick<Project, 'name' | 'color'>>) => {
+  const updateProject = async (id: string, updates: Partial<Pick<DatabaseProject, 'name' | 'color'>>) => {
     try {
       const { data, error } = await supabase
         .from('projects')
@@ -108,7 +119,12 @@ export function useProjects() {
         return false;
       }
 
-      setProjects(prev => prev.map(p => p.id === id ? data : p));
+      setProjects(prev => prev.map(p => p.id === id ? {
+        id: data.id,
+        name: data.name,
+        color: data.color,
+        createdAt: new Date(data.created_at),
+      } : p));
       toast({
         title: 'Project Updated',
         description: 'Project has been updated successfully.',

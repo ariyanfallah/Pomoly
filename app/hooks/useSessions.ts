@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '../integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { SessionType } from '@/types';
+import type { SessionType } from '@/types';
 
 export interface DatabaseSession {
   id: string;

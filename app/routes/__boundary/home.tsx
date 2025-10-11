@@ -75,7 +75,7 @@ const Index = () => {
               <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
                 P
               </div>
-              <h1 className="text-xl font-semibold">Pomodoro Focus</h1>
+              <h1 className="text-xl font-semibold">Pomolos</h1>
             </div>
             
             <div className="flex items-center gap-2">

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { TimerState, SessionType, TimerSettings } from '@/types';
+import type { TimerState, SessionType, TimerSettings, TimerSession } from '@/types';
 import { useLocalStorage } from './useLocalStorage';
 
 const defaultSettings: TimerSettings = {
@@ -11,7 +11,7 @@ const defaultSettings: TimerSettings = {
 
 export function useTimer() {
   const [settings] = useLocalStorage<TimerSettings>('pomodoroSettings', defaultSettings);
-  const [sessions, setSessions] = useLocalStorage('pomodoroSessions', []);
+  const [sessions, setSessions] = useLocalStorage<TimerSession[]>('pomodoroSessions', []);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [nextSessionType, setNextSessionType] = useState<SessionType>('focus');
   
@@ -55,7 +55,7 @@ export function useTimer() {
               duration: getSessionDuration(prev.sessionType),
               completedAt: new Date(),
             };
-            setSessions((prevSessions: any[]) => [...prevSessions, newSession]);
+            setSessions((prevSessions: TimerSession[]) => [...prevSessions, newSession]);
           }
 
           const newCompletedCount = prev.sessionType === 'focus' 
@@ -148,7 +148,7 @@ export function useTimer() {
               duration: getSessionDuration(prev.sessionType),
               completedAt: new Date(),
             };
-            setSessions((prevSessions: any[]) => [...prevSessions, newSession]);
+            setSessions((prevSessions: TimerSession[]) => [...prevSessions, newSession]);
           }
 
           const newCompletedCount = prev.sessionType === 'focus' 

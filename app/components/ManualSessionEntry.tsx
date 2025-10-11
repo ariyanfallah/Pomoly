@@ -10,12 +10,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format, set } from 'date-fns';
 import { CalendarIcon, Clock, Plus, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SessionType } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
+import type { Project, SessionType } from '@/types';
+import { supabase } from '../integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface ManualSessionEntryProps {
-  projects: any[];
+  projects: Project[];
   onSessionAdded?: () => void;
 }
 

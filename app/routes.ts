@@ -13,5 +13,7 @@ export default [
 
       ]),
     ]),
+    
+    route('*', 'routes/__boundary/404.tsx'),
   ]),
 ] satisfies RouteConfig;

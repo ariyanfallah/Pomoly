@@ -1,4 +1,4 @@
-import { TimerSession, Project, SessionType } from '@/types';
+import type{ TimerSession,Project, SessionType } from '@/types';
 
 const projectColors = [
   'hsl(220, 85%, 57%)', // Blue

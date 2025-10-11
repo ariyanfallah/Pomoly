@@ -1,89 +1,169 @@
-import { Link } from "react-router";
-import { useAuth } from "../../contexts/AuthContext";
+import { useState, useEffect, useCallback } from 'react';
+import { Timer } from '@/components/Timer';
+import { ProjectSelector } from '@/components/ProjectSelector';
+import { Analytics } from '@/components/Analytics';
+import { Sessions } from '@/components/Sessions';
+import { Settings } from '@/components/Settings';
+import { TimerCompleteModal } from '@/components/TimerCompleteModal';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Timer as TimerIcon, BarChart3, History } from 'lucide-react';
+import { useTimer } from '@/hooks/useTimer';
+import { useSearchParams, useLoaderData, type LoaderFunctionArgs } from 'react-router';
 
+/* eslint-disable-next-line react-refresh/only-export-components */
+export async function loader({ request }: LoaderFunctionArgs) {
+  const url = new URL(request.url);
+  return {
+    projectId: url.searchParams.get('projectId'),
+  };
+}
 
-export default function Home() {
-  const { user, loading } = useAuth();
+const Index = () => {
+  const [activeTab, setActiveTab] = useState('timer');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { projectId: initialProjectId } = useLoaderData<typeof loader>();
+  const {
+    timerState,
+    startTimer,
+    pauseTimer,
+    resetTimer,
+    switchSession,
+    setCurrentProject,
+    showCompleteModal,
+    nextSessionType,
+    closeCompleteModal,
+    startNextSession,
+  } = useTimer(initialProjectId);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const projectIdFromQuery = searchParams.get('projectId');
+    if (projectIdFromQuery !== timerState.currentProjectId) {
+      setCurrentProject(projectIdFromQuery);
+    }
+    if (!projectIdFromQuery && timerState.currentProjectId) {
+      setCurrentProject(null);
+    }
+  }, [searchParams, setCurrentProject, timerState.currentProjectId]);
+
+  const handleProjectChange = useCallback((projectId: string | null) => {
+    setCurrentProject(projectId);
+
+    const nextParams = new URLSearchParams(searchParams);
+    const currentQueryValue = searchParams.get('projectId');
+
+    if (projectId) {
+      if (currentQueryValue !== projectId) {
+        nextParams.set('projectId', projectId);
+        setSearchParams(nextParams, { replace: true });
+      }
+      return;
+    }
+
+    if (currentQueryValue) {
+      nextParams.delete('projectId');
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [searchParams, setCurrentProject, setSearchParams]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900">Welcome to TikoTocka</h1>
-          <div className="mt-12 space-y-6">
-            {user ? (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Welcome back, {user.email}!
-                </h2>
-                <p className="text-lg text-gray-600">
-                  You're successfully authenticated with Supabase.
-                </p>
-                <div className="flex justify-center space-x-4">
-                  <Link
-                    to="/dashboard"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                  >
-                    Go to Dashboard
-                  </Link>
-                </div>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+                P
               </div>
-            ) : (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Get Started with TikoTocka
-                </h2>
-                <p className="text-lg text-gray-600">
-                  Sign in or create an account to access your personalized dashboard.
-                </p>
-                <div className="flex justify-center space-x-4">
-                  <Link
-                    to="/auth"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                  >
-                    Sign In / Sign Up
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-16 grid md:grid-cols-3 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Secure Authentication
-              </h3>
-              <p className="text-gray-600">
-                Built with Supabase Auth for enterprise-grade security and reliability.
-              </p>
+              <h1 className="text-xl font-semibold">Pomodoro Focus</h1>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Real-time Database
-              </h3>
-              <p className="text-gray-600">
-                Powered by Supabase for real-time data synchronization and storage.
-              </p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Modern UI
-              </h3>
-              <p className="text-gray-600">
-                Beautiful, responsive interface built with React Router and Tailwind CSS.
-              </p>
+            
+            <div className="flex items-center gap-2">
+              <Settings />
             </div>
           </div>
         </div>
-      </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="flex justify-center mb-8">
+            <TabsList className="grid w-full max-w-lg grid-cols-3 rounded-2xl h-12 p-1 bg-secondary shadow-soft">
+              <TabsTrigger 
+                value="timer" 
+                className="rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-soft transition-smooth"
+              >
+                <TimerIcon className="h-4 w-4 mr-2" />
+                Timer
+              </TabsTrigger>
+              <TabsTrigger 
+                value="sessions"
+                className="rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-soft transition-smooth"
+              >
+                <History className="h-4 w-4 mr-2" />
+                Sessions
+              </TabsTrigger>
+              <TabsTrigger 
+                value="analytics"
+                className="rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-soft transition-smooth"
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Analytics
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="timer" className="space-y-8 fade-in">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl font-light text-foreground">
+                Stay focused, stay productive
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Use the Pomodoro Technique to break your work into focused intervals, 
+                separated by short breaks. Track your progress across different projects.
+              </p>
+            </div>
+
+            <Timer
+              timeLeft={timerState.timeLeft}
+              sessionType={timerState.sessionType}
+              isRunning={timerState.isRunning}
+              onStart={startTimer}
+              onPause={pauseTimer}
+              onReset={resetTimer}
+              onSwitchSession={switchSession}
+            />
+
+            <div className="max-w-lg mx-auto">
+              <ProjectSelector
+                currentProjectId={timerState.currentProjectId}
+                onProjectChange={handleProjectChange}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="sessions" className="fade-in">
+            <Sessions />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="fade-in">
+            <Analytics />
+          </TabsContent>
+        </Tabs>
+      </main>
+
+      {/* Timer Complete Modal */}
+      <TimerCompleteModal
+        isOpen={showCompleteModal}
+        onClose={closeCompleteModal}
+        sessionType={timerState.sessionType}
+        nextSessionType={nextSessionType}
+        onStartNext={startNextSession}
+        completedFocusCount={timerState.completedFocusCount}
+      />
     </div>
   );
-}
+};
+
+export default Index;

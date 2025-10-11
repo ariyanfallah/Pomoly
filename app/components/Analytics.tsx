@@ -3,14 +3,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Tooltip, Legend } from 'recharts';
 import { Calendar, Clock, TrendingUp, Target, TrendingDown, Activity, ArrowUpRight, ArrowDownRight, Sparkles, Trash2, PieChart as PieChartIcon } from 'lucide-react';
-import { TimerSession, Project } from '@/types';
+import type { TimerSession, Project } from '@/types';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { AnalyticsStreakCard } from './AnalyticsStreakCard';
 import { AnalyticsFilters } from './AnalyticsFilters';
 import { DateRangePicker } from './DateRangePicker';
 import { calculateAnalyticsData } from '@/utils/analyticsHelpers';
 import { seedMockData, clearMockData } from '@/utils/mockData';
-import { DateRange } from "react-day-picker";
+import type { DateRange } from "react-day-picker";
 import { isWithinInterval, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 
 type ViewPeriod = 'daily' | 'weekly' | 'monthly' | 'custom';

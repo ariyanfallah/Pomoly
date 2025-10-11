@@ -9,7 +9,7 @@ const defaultSettings: TimerSettings = {
   longBreakInterval: 4,
 };
 
-export function useTimer() {
+export function useTimer(initialProjectId: string | null = null) {
   const [settings] = useLocalStorage<TimerSettings>('pomodoroSettings', defaultSettings);
   const [sessions, setSessions] = useLocalStorage<TimerSession[]>('pomodoroSessions', []);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
@@ -19,7 +19,7 @@ export function useTimer() {
     timeLeft: settings.focusDuration * 60,
     sessionType: 'focus',
     isRunning: false,
-    currentProjectId: null,
+    currentProjectId: initialProjectId,
     completedFocusCount: 0,
   });
 
@@ -186,6 +186,13 @@ export function useTimer() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    setTimerState(prev => {
+      if (prev.currentProjectId === initialProjectId) return prev;
+      return { ...prev, currentProjectId: initialProjectId };
+    });
+  }, [initialProjectId]);
 
   return {
     timerState,

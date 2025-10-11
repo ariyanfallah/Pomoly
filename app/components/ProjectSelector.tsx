@@ -21,86 +21,69 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Project } from '@/types';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-
+import { useProjects } from '@/hooks/useProjects';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router';
 interface ProjectSelectorProps {
   currentProjectId: string | null;
   onProjectChange: (projectId: string | null) => void;
 }
-
-const defaultProjects: Project[] = [
-  { id: '1', name: 'Work Tasks', color: '#5EADD1', createdAt: new Date() },
-  { id: '2', name: 'Learning', color: '#7BC96F', createdAt: new Date() },
-  { id: '3', name: 'Personal', color: '#F7931E', createdAt: new Date() },
-];
-
 const projectColors = [
   '#5EADD1', '#7BC96F', '#F7931E', '#E85D75', '#9B5DE5', '#F15BB5'
 ];
-
 export function ProjectSelector({ currentProjectId, onProjectChange }: ProjectSelectorProps) {
-  const [projects, setProjects] = useLocalStorage<Project[]>('pomodoroProjects', defaultProjects);
+  const navigate = useNavigate();
+  const { projects, createProject, updateProject, deleteProject } = useProjects();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [projectName, setProjectName] = useState('');
   const [selectedColor, setSelectedColor] = useState(projectColors[0]);
-
-  const handleCreateProject = () => {
+  const handleCreateProject = async () => {
     if (!projectName.trim()) return;
-
-    const newProject: Project = {
-      id: Date.now().toString(),
-      name: projectName.trim(),
-      color: selectedColor,
-      createdAt: new Date(),
-    };
-
-    setProjects([...projects, newProject]);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    const createdProject = await createProject(projectName.trim(), selectedColor);
+    if (!createdProject) return;
     setProjectName('');
     setSelectedColor(projectColors[0]);
     setIsDialogOpen(false);
-    onProjectChange(newProject.id);
+    onProjectChange(createdProject.id);
   };
-
   const handleEditProject = (project: Project) => {
     setEditingProject(project);
     setProjectName(project.name);
     setSelectedColor(project.color);
     setIsDialogOpen(true);
   };
-
-  const handleUpdateProject = () => {
+  const handleUpdateProject = async () => {
     if (!editingProject || !projectName.trim()) return;
-
-    const updatedProjects = projects.map(p => 
-      p.id === editingProject.id 
-        ? { ...p, name: projectName.trim(), color: selectedColor }
-        : p
-    );
-
-    setProjects(updatedProjects);
+    const success = await updateProject(editingProject.id, {
+      name: projectName.trim(),
+      color: selectedColor,
+    });
+    if (!success) return;
     setEditingProject(null);
     setProjectName('');
     setSelectedColor(projectColors[0]);
     setIsDialogOpen(false);
   };
-
-  const handleDeleteProject = (projectId: string) => {
-    setProjects(projects.filter(p => p.id !== projectId));
+  const handleDeleteProject = async (projectId: string) => {
+    const success = await deleteProject(projectId);
+    if (!success) return;
     if (currentProjectId === projectId) {
       onProjectChange(null);
     }
   };
-
   const resetDialog = () => {
     setEditingProject(null);
     setProjectName('');
     setSelectedColor(projectColors[0]);
     setIsDialogOpen(false);
   };
-
   const currentProject = projects.find(p => p.id === currentProjectId);
-
   return (
     <Card className="p-6 shadow-soft border-0">
       <div className="space-y-4">
@@ -210,7 +193,7 @@ export function ProjectSelector({ currentProjectId, onProjectChange }: ProjectSe
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteProject(project.id);
+                        void handleDeleteProject(project.id);
                       }}
                       className="p-1 hover:bg-destructive/10 hover:text-destructive rounded"
                     >
@@ -222,7 +205,6 @@ export function ProjectSelector({ currentProjectId, onProjectChange }: ProjectSe
             ))}
           </SelectContent>
         </Select>
-
         {!currentProject && (
           <p className="text-sm text-muted-foreground text-center py-2">
             Select or create a project to start tracking your focus time

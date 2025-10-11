@@ -3,10 +3,12 @@ import type { Route } from "../../+types/root";
 import { createSupabaseServerClient } from "../../lib/supabase.server";
 import type { Session } from "@supabase/supabase-js";
 import { AuthProvider } from "../../contexts/AuthContext";
+import { Navbar } from "~/components/Navbar";
 
 function AppContent() {
   return (
     <>
+      <Navbar />
       <Outlet />
     </>
   );

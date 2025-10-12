@@ -29,9 +29,9 @@ export const Navbar = () => {
                     ) : (
                         <Link
                         to="/auth"
-                        className="flex items-center gap-2"
+                        className="flex items-center"
                         >
-                            <Button variant="outline" size="icon" className="rounded-full">Login</Button>
+                            <Button variant="default" size="default" className="rounded-md">Login</Button>
                         </Link>
                     )}
                     </div>

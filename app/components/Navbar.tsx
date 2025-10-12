@@ -1,12 +1,12 @@
-import { Link, Navigate, useLoaderData } from "react-router";
+import { Link } from "react-router";
 import { Settings } from "./Settings";
-import type { Session } from "@supabase/supabase-js";
 import { Button } from "./ui/button";
 import { UserIcon } from "lucide-react";
 import { UserDropdown } from "./UserDropdown";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Navbar = () => {
-    const { session } = useLoaderData() as { session: Session | null };
+    const { user } = useAuth();
 
     return (
         <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
@@ -20,10 +20,10 @@ export const Navbar = () => {
                     
                     <div className="flex items-center gap-2">
                     <Settings />
-                    {session?.user ? 
+                    {user ? 
                     (
                         <div className="">
-                            <UserDropdown user={session.user} />
+                            <UserDropdown user={user} />
                         </div>
                     ) : (
                         <Link

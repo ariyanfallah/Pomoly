@@ -4,12 +4,14 @@ import { createSupabaseServerClient } from "../../lib/supabase.server";
 import type { User } from "@supabase/supabase-js";
 import { AuthProvider } from "../../contexts/AuthContext";
 import { Navbar } from "~/components/Navbar";
+import { Toaster } from "~/components/ui/toaster";
 
 function AppContent() {
   return (
     <>
       <Navbar />
       <Outlet />
+      <Toaster />
     </>
   );
 }
@@ -28,5 +30,3 @@ export async function loader({ request }: Route.LoaderArgs) {
   const { data: { user } } = await supabase.auth.getUser()
   return Response.json({ user }, { headers })
 }
-
-

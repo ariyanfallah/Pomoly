@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Settings as SettingsIcon, Clock, Coffee, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,23 +14,59 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import type { TimerSettings } from '@/types';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-
-const defaultSettings: TimerSettings = {
-  focusDuration: 25,
-  shortBreakDuration: 5,
-  longBreakDuration: 15,
-  longBreakInterval: 4,
-};
+import { useSearchParams } from 'react-router';
+import { useTimerSettings } from '@/hooks/useTimerSettings';
+import { useToast } from '@/hooks/use-toast';
 
 export function Settings() {
-  const [settings, setSettings] = useLocalStorage<TimerSettings>('pomodoroSettings', defaultSettings);
+  const [searchParams] = useSearchParams();
+  const projectIdFromUrl = useMemo(() => searchParams.get('projectId'), [searchParams]);
+  const { settings, saveSettings, defaultSettings, isAuthenticated, projectId, authReady } = useTimerSettings({
+    projectId: projectIdFromUrl,
+  });
   const [isOpen, setIsOpen] = useState(false);
   const [tempSettings, setTempSettings] = useState<TimerSettings>(settings);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
-  const handleSave = () => {
-    setSettings(tempSettings);
-    setIsOpen(false);
+  useEffect(() => {
+    setTempSettings(settings);
+  }, [settings]);
+
+  const handleSave = async () => {
+    if (isAuthenticated && !authReady) {
+      toast({
+        title: 'Verifying your account',
+        description: 'Please wait a moment and try saving again.',
+      });
+      return;
+    }
+
+    if (isAuthenticated && !projectId) {
+      toast({
+        title: 'Select a project',
+        description: 'Choose a project before saving project-specific settings.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const success = await saveSettings(tempSettings);
+      if (!success) return;
+
+      toast({
+        title: 'Settings saved',
+        description: isAuthenticated
+          ? 'Your project settings have been updated.'
+          : 'Settings stored locally in your browser.',
+      });
+
+      setIsOpen(false);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -209,7 +245,7 @@ export function Settings() {
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} disabled={isSaving || (isAuthenticated && !authReady)}>
             Save Settings
           </Button>
         </DialogFooter>

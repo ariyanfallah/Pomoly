@@ -4,14 +4,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui
 import { useActionData, redirect } from "react-router";
 import type { Route } from "../../../+types/root";
 import { createSupabaseServerClient } from "../../../lib/supabase.server";
+import { brandConfig } from "~/configs/brand.config";
 
 export default function Auth() {
   const actionData = useActionData() as { error?: string | null; success?: string | null } | undefined
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="max-w-md w-full space-y-8 p-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Welcome to TikoTocka</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Welcome to <span className="text-primary">{brandConfig.brandName}!</span></h2>
           <p className="mt-2 text-sm text-gray-600">
             Sign in to your account or create a new one
           </p>

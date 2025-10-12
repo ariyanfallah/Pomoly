@@ -10,6 +10,15 @@ import { Timer as TimerIcon, BarChart3, History } from 'lucide-react';
 import { useTimer } from '@/hooks/useTimer';
 import { useSearchParams, useLoaderData, type LoaderFunctionArgs } from 'react-router';
 
+import { type MetaFunction } from "react-router";
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Pomolos" },
+    { name: "description", content: "Sessions that ship" },
+  ];
+};
+
 /* eslint-disable-next-line react-refresh/only-export-components */
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);

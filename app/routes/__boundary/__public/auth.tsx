@@ -64,5 +64,12 @@ export async function action({ request }: Route.ActionArgs) {
     }
     return new Response(JSON.stringify({ success: 'Check your email for a confirmation link!' }), { headers: { ...Object.fromEntries(headers), 'Content-Type': 'application/json' } })
   }
+  if (intent === 'logout') {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      return new Response(JSON.stringify({ error: error.message }), { headers: { ...Object.fromEntries(headers), 'Content-Type': 'application/json' }, status: 400 })
+    }
+    throw redirect('/auth', { headers })
+  }
   return new Response(JSON.stringify({ error: 'Unsupported action' }), { headers: { 'Content-Type': 'application/json' }, status: 400 })
 }

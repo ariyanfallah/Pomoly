@@ -34,7 +34,7 @@ export function Settings() {
   }, [settings]);
 
   const handleSave = async () => {
-    if (isAuthenticated && !authReady) {
+    if (!authReady) {
       toast({
         title: 'Verifying your account',
         description: 'Please wait a moment and try saving again.',
@@ -59,8 +59,8 @@ export function Settings() {
       toast({
         title: 'Settings saved',
         description: isAuthenticated
-          ? 'Your project settings have been updated.'
-          : 'Settings stored locally in your browser.',
+          ? 'Project timer settings updated.'
+          : 'Timer settings updated.',
       });
 
       setIsOpen(false);
@@ -245,7 +245,7 @@ export function Settings() {
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isSaving || (isAuthenticated && !authReady)}>
+          <Button onClick={handleSave} disabled={isSaving || !authReady}>
             Save Settings
           </Button>
         </DialogFooter>

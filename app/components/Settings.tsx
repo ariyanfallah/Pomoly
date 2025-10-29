@@ -86,8 +86,11 @@ export function Settings() {
                     type="number"
                     min="1"
                     max="90"
-                    value={tempSettings.focusDuration}
-                    onChange={(e) => updateSetting('focusDuration', parseInt(e.target.value) || 25)}
+                  value={tempSettings.focusDuration}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updateSetting('focusDuration', v === '' ? '' : parseInt(v));
+                  }}
                     className="w-20"
                   />
                   <span className="text-sm text-muted-foreground">minutes</span>
@@ -117,8 +120,11 @@ export function Settings() {
                     type="number"
                     min="1"
                     max="30"
-                    value={tempSettings.shortBreakDuration}
-                    onChange={(e) => updateSetting('shortBreakDuration', parseInt(e.target.value) || 5)}
+                  value={tempSettings.shortBreakDuration}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updateSetting('shortBreakDuration', v === '' ? '' : parseInt(v));
+                  }}
                     className="w-20"
                   />
                   <span className="text-sm text-muted-foreground">minutes</span>
@@ -148,8 +154,11 @@ export function Settings() {
                     type="number"
                     min="5"
                     max="60"
-                    value={tempSettings.longBreakDuration}
-                    onChange={(e) => updateSetting('longBreakDuration', parseInt(e.target.value) || 15)}
+                  value={tempSettings.longBreakDuration}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updateSetting('longBreakDuration', v === '' ? '' : parseInt(v));
+                  }}
                     className="w-20"
                   />
                   <span className="text-sm text-muted-foreground">minutes</span>
@@ -171,7 +180,10 @@ export function Settings() {
                 min="2"
                 max="8"
                 value={tempSettings.longBreakInterval}
-                onChange={(e) => updateSetting('longBreakInterval', parseInt(e.target.value) || 4)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  updateSetting('longBreakInterval', v === '' ? '' : parseInt(v));
+                }}
                 className="inline-flex w-16 h-8 mx-1"
               />
               focus sessions

@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import type { TimerSettings } from '@/types';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { CounterButtons } from '@/components/ui/counterButtons';
 
 const defaultSettings: TimerSettings = {
   focusDuration: 25,
@@ -42,7 +43,7 @@ export function Settings() {
     setTempSettings(defaultSettings);
   };
 
-  const updateSetting = (key: keyof TimerSettings, value: number) => {
+  const updateSetting = (key: keyof TimerSettings, value: number | "") => {
     setTempSettings(prev => ({ ...prev, [key]: value }));
   };
 
@@ -81,18 +82,24 @@ export function Settings() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Input
-                    id="focus"
-                    type="number"
-                    min="1"
-                    max="90"
-                  value={tempSettings.focusDuration}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    updateSetting('focusDuration', v === '' ? '' : parseInt(v));
-                  }}
-                    className="w-20"
-                  />
+                  <CounterButtons onDecrement={() => {
+                    updateSetting('focusDuration', tempSettings.focusDuration > 1 ? tempSettings.focusDuration - 1 : 1);
+                  }} onIncrement={() => {
+                    updateSetting('focusDuration', tempSettings.focusDuration + 1);
+                  }}>
+                    <Input
+                      id="focus"
+                      type="number"
+                      min="1"
+                      max="90"
+                      value={tempSettings.focusDuration}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        updateSetting('focusDuration', v === '' ? '' : parseInt(v));
+                      }}
+                      className="h-full w-full p-0 border-none text-center [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] "
+                    />
+                  </CounterButtons>
                   <span className="text-sm text-muted-foreground">minutes</span>
                 </div>
               </div>
@@ -115,18 +122,25 @@ export function Settings() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Input
-                    id="shortBreak"
-                    type="number"
-                    min="1"
-                    max="30"
-                  value={tempSettings.shortBreakDuration}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    updateSetting('shortBreakDuration', v === '' ? '' : parseInt(v));
-                  }}
-                    className="w-20"
-                  />
+                  <CounterButtons onDecrement={() => {
+                    updateSetting('shortBreakDuration', tempSettings.shortBreakDuration > 1 ? tempSettings.shortBreakDuration - 1 : 1);
+                  }} onIncrement={() => {
+                    updateSetting('shortBreakDuration', tempSettings.shortBreakDuration + 1 );
+                  }}>
+                    
+                    <Input
+                      id="shortBreak"
+                      type="number"
+                      min="1"
+                      max="90"
+                      value={tempSettings.shortBreakDuration}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        updateSetting('shortBreakDuration', v === '' ? '' : parseInt(v));
+                      }}
+                      className="h-full w-full p-0 border-none text-center [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                    />
+                  </CounterButtons>
                   <span className="text-sm text-muted-foreground">minutes</span>
                 </div>
               </div>
@@ -149,7 +163,12 @@ export function Settings() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Input
+                  <CounterButtons onDecrement={() => {
+                    updateSetting('longBreakDuration', tempSettings.longBreakDuration > 5 ? tempSettings.longBreakDuration - 1 : 5);
+                  }} onIncrement={() => {
+                    updateSetting('longBreakDuration', tempSettings.longBreakDuration + 1);
+                  }}>
+                    <Input
                     id="longBreak"
                     type="number"
                     min="5"
@@ -159,8 +178,10 @@ export function Settings() {
                     const v = e.target.value;
                     updateSetting('longBreakDuration', v === '' ? '' : parseInt(v));
                   }}
-                    className="w-20"
+                  className="h-full w-full p-0 border-none text-center [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                   
                   />
+                  </CounterButtons>
                   <span className="text-sm text-muted-foreground">minutes</span>
                 </div>
               </div>
@@ -174,6 +195,11 @@ export function Settings() {
             </Label>
             <p className="text-sm text-muted-foreground">
               Take a long break after every{' '}
+              <CounterButtons onDecrement={() => {
+                updateSetting('longBreakInterval',tempSettings.longBreakInterval > 2 ? tempSettings.longBreakInterval  - 1 : 2 );
+              }} onIncrement={() => {
+                updateSetting('longBreakInterval', tempSettings.longBreakInterval < 8 ? tempSettings.longBreakInterval + 1 : 8);
+              }}>
               <Input
                 id="interval"
                 type="number"
@@ -184,8 +210,10 @@ export function Settings() {
                   const v = e.target.value;
                   updateSetting('longBreakInterval', v === '' ? '' : parseInt(v));
                 }}
-                className="inline-flex w-16 h-8 mx-1"
+                className=" p-0 border-none text-center [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                 
               />
+              </CounterButtons>
               focus sessions
             </p>
           </div>

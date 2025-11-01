@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, Clock, Coffee, Moon } from 'lucide-react';
+import { Settings as SettingsIcon, Clock, Coffee, Moon ,RotateCcwSquare  } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -48,13 +48,13 @@ export function Settings() {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen} >
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="rounded-full">
           <SettingsIcon className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#318167] scrollbar-track-[#F6F3DD]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <SettingsIcon className="h-5 w-5" />
@@ -110,7 +110,7 @@ export function Settings() {
           <Card className="p-4 border-0 bg-accent-light/20">
             <div className="flex items-start gap-4">
               <div className="p-2 rounded-lg bg-accent-light">
-                <Coffee className="h-5 w-5 text-accent" />
+                <Coffee className="h-5 w-5 text-muted-foreground" />
               </div>
               <div className="flex-1 space-y-3">
                 <div>
@@ -148,9 +148,9 @@ export function Settings() {
           </Card>
 
           {/* Long Break Duration */}
-          <Card className="p-4 border-0 bg-muted/50">
+          <Card className="p-4 border-0 bg-accent-light/20">
             <div className="flex items-start gap-4">
-              <div className="p-2 rounded-lg bg-muted">
+              <div className="p-2 rounded-lg  bg-accent-light">
                 <Moon className="h-5 w-5 text-muted-foreground" />
               </div>
               <div className="flex-1 space-y-3">
@@ -181,20 +181,29 @@ export function Settings() {
                   className="h-full w-full p-0 border-none text-center [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                    
                   />
+
                   </CounterButtons>
                   <span className="text-sm text-muted-foreground">minutes</span>
                 </div>
               </div>
             </div>
           </Card>
-
+          <Card className="p-4 border-0 bg-accent-light/20">
           {/* Long Break Interval */}
-          <div className="space-y-3">
-            <Label htmlFor="interval" className="text-base font-medium">
-              Long Break Interval
-            </Label>
-            <p className="text-sm text-muted-foreground">
-              Take a long break after every{' '}
+          <div className="flex items-start gap-4">
+            <div className="p-2 rounded-lg  bg-accent-light">
+              <RotateCcwSquare className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="flex-1 space-y-3">
+              <div>
+                <Label htmlFor="interval" className="text-base font-medium">
+                  Long Break Interval
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Take a long break after every{' '}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
               <CounterButtons onDecrement={() => {
                 updateSetting('longBreakInterval',tempSettings.longBreakInterval > 2 ? tempSettings.longBreakInterval  - 1 : 2 );
               }} onIncrement={() => {
@@ -213,11 +222,13 @@ export function Settings() {
                 className=" p-0 border-none text-center [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                  
               />
+              
               </CounterButtons>
-              focus sessions
-            </p>
+              <span className="text-sm text-muted-foreground">focus sessions</span>
+              </div>
+            </div>
           </div>
-
+          </Card>
           {/* Current Settings Preview */}
           <Card className="p-4 bg-secondary/50 border-0">
             <h4 className="font-medium mb-3">Current Schedule</h4>

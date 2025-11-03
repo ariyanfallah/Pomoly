@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Settings as SettingsIcon, Clock, Coffee, Moon } from 'lucide-react';
+import { Settings as SettingsIcon, Clock, Coffee, Moon ,RotateCcwSquare  } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,6 +17,8 @@ import type { TimerSettings } from '@/types';
 import { useSearchParams } from 'react-router';
 import { useTimerSettings } from '@/hooks/useTimerSettings';
 import { useToast } from '@/hooks/use-toast';
+import { CounterButtons } from '@/components/ui/counterButtons';
+
 
 export function Settings() {
   const [searchParams] = useSearchParams();
@@ -78,18 +80,18 @@ export function Settings() {
     setTempSettings(defaultSettings);
   };
 
-  const updateSetting = (key: keyof TimerSettings, value: number) => {
+  const updateSetting = (key: keyof TimerSettings, value: number | "") => {
     setTempSettings(prev => ({ ...prev, [key]: value }));
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen} >
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="rounded-full">
           <SettingsIcon className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#318167] scrollbar-track-[#F6F3DD]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <SettingsIcon className="h-5 w-5" />
@@ -117,15 +119,24 @@ export function Settings() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Input
-                    id="focus"
-                    type="number"
-                    min="1"
-                    max="90"
-                    value={tempSettings.focusDuration}
-                    onChange={(e) => updateSetting('focusDuration', parseInt(e.target.value) || 25)}
-                    className="w-20"
-                  />
+                  <CounterButtons onDecrement={() => {
+                    updateSetting('focusDuration', tempSettings.focusDuration > 1 ? tempSettings.focusDuration - 1 : 1);
+                  }} onIncrement={() => {
+                    updateSetting('focusDuration', tempSettings.focusDuration + 1);
+                  }}>
+                    <Input
+                      id="focus"
+                      type="number"
+                      min="1"
+                      max="90"
+                      value={tempSettings.focusDuration}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        updateSetting('focusDuration', v === '' ? '' : parseInt(v));
+                      }}
+                      className="h-full w-full p-0 border-none text-center [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] "
+                    />
+                  </CounterButtons>
                   <span className="text-sm text-muted-foreground">minutes</span>
                 </div>
               </div>
@@ -136,7 +147,7 @@ export function Settings() {
           <Card className="p-4 border-0 bg-accent-light/20">
             <div className="flex items-start gap-4">
               <div className="p-2 rounded-lg bg-accent-light">
-                <Coffee className="h-5 w-5 text-accent" />
+                <Coffee className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1 space-y-3">
                 <div>
@@ -148,15 +159,25 @@ export function Settings() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Input
-                    id="shortBreak"
-                    type="number"
-                    min="1"
-                    max="30"
-                    value={tempSettings.shortBreakDuration}
-                    onChange={(e) => updateSetting('shortBreakDuration', parseInt(e.target.value) || 5)}
-                    className="w-20"
-                  />
+                  <CounterButtons onDecrement={() => {
+                    updateSetting('shortBreakDuration', tempSettings.shortBreakDuration > 1 ? tempSettings.shortBreakDuration - 1 : 1);
+                  }} onIncrement={() => {
+                    updateSetting('shortBreakDuration', tempSettings.shortBreakDuration + 1 );
+                  }}>
+                    
+                    <Input
+                      id="shortBreak"
+                      type="number"
+                      min="1"
+                      max="90"
+                      value={tempSettings.shortBreakDuration}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        updateSetting('shortBreakDuration', v === '' ? '' : parseInt(v));
+                      }}
+                      className="h-full w-full p-0 border-none text-center [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                    />
+                  </CounterButtons>
                   <span className="text-sm text-muted-foreground">minutes</span>
                 </div>
               </div>
@@ -164,10 +185,10 @@ export function Settings() {
           </Card>
 
           {/* Long Break Duration */}
-          <Card className="p-4 border-0 bg-muted/50">
+          <Card className="p-4 border-0 bg-accent-light/20">
             <div className="flex items-start gap-4">
-              <div className="p-2 rounded-lg bg-muted">
-                <Moon className="h-5 w-5 text-muted-foreground" />
+              <div className="p-2 rounded-lg  bg-accent-light">
+                <Moon className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1 space-y-3">
                 <div>
@@ -179,41 +200,72 @@ export function Settings() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Input
+                  <CounterButtons onDecrement={() => {
+                    updateSetting('longBreakDuration', tempSettings.longBreakDuration > 5 ? tempSettings.longBreakDuration - 1 : 5);
+                  }} onIncrement={() => {
+                    updateSetting('longBreakDuration', tempSettings.longBreakDuration + 1);
+                  }}>
+                    <Input
                     id="longBreak"
                     type="number"
                     min="5"
                     max="60"
-                    value={tempSettings.longBreakDuration}
-                    onChange={(e) => updateSetting('longBreakDuration', parseInt(e.target.value) || 15)}
-                    className="w-20"
+                  value={tempSettings.longBreakDuration}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updateSetting('longBreakDuration', v === '' ? '' : parseInt(v));
+                  }}
+                  className="h-full w-full p-0 border-none text-center [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                   
                   />
+
+                  </CounterButtons>
                   <span className="text-sm text-muted-foreground">minutes</span>
                 </div>
               </div>
             </div>
           </Card>
-
+          <Card className="p-4 border-0 bg-accent-light/20">
           {/* Long Break Interval */}
-          <div className="space-y-3">
-            <Label htmlFor="interval" className="text-base font-medium">
-              Long Break Interval
-            </Label>
-            <p className="text-sm text-muted-foreground">
-              Take a long break after every{' '}
+          <div className="flex items-start gap-4">
+            <div className="p-2 rounded-lg  bg-accent-light">
+              <RotateCcwSquare className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 space-y-3">
+              <div>
+                <Label htmlFor="interval" className="text-base font-medium">
+                  Long Break Interval
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Take a long break after every{' '}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+              <CounterButtons onDecrement={() => {
+                updateSetting('longBreakInterval',tempSettings.longBreakInterval > 2 ? tempSettings.longBreakInterval  - 1 : 2 );
+              }} onIncrement={() => {
+                updateSetting('longBreakInterval', tempSettings.longBreakInterval < 8 ? tempSettings.longBreakInterval + 1 : 8);
+              }}>
               <Input
                 id="interval"
                 type="number"
                 min="2"
                 max="8"
                 value={tempSettings.longBreakInterval}
-                onChange={(e) => updateSetting('longBreakInterval', parseInt(e.target.value) || 4)}
-                className="inline-flex w-16 h-8 mx-1"
+                onChange={(e) => {
+                  const v = e.target.value;
+                  updateSetting('longBreakInterval', v === '' ? '' : parseInt(v));
+                }}
+                className=" p-0 border-none text-center [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                 
               />
-              focus sessions
-            </p>
+              
+              </CounterButtons>
+              <span className="text-sm text-muted-foreground">focus sessions</span>
+              </div>
+            </div>
           </div>
-
+          </Card>
           {/* Current Settings Preview */}
           <Card className="p-4 bg-secondary/50 border-0">
             <h4 className="font-medium mb-3">Current Schedule</h4>

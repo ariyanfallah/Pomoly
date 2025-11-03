@@ -1,11 +1,11 @@
 {
-  "name": "TIKOTOCKA",
+  "name": "POMOLOS",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
+    "start": "HOST=0.0.0.0 PORT=${PORT:-8080} react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {

@@ -8,8 +8,8 @@ export default function PrivateLayout() {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { supabase, headers } = createSupabaseServerClient(request)
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
     throw redirect('/auth', { headers })
   }
   return new Response(null, { headers })

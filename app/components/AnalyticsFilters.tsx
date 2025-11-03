@@ -1,5 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Project } from '@/types';
+import type { Project } from '@/types';
 
 interface AnalyticsFiltersProps {
   projects: Project[];

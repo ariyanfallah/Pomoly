@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="176" height="176" viewBox="0 0 176 176" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pomolos logomark">
+  <title>Pomolos Logomark</title>
+  <defs>
+    <style><![CDATA[
+      :root{
+        --primary: 160 45% 35%;
+        --primary-glow: 160 35% 55%;
+        --accent: 45 85% 65%;
+      }
+    ]]></style>
+    <linearGradient id="gRing" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="hsl(var(--primary,160 45% 35%))"/>
+      <stop offset="1" stop-color="hsl(var(--primary-glow,160 35% 55%))"/>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="hsl(var(--primary,160 45% 35%))" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <g transform="translate(0,0)" filter="url(#softShadow)">
+    <circle cx="88" cy="88" r="64" fill="none" stroke="url(#gRing)" stroke-width="16" stroke-linecap="round"/>
+    <circle cx="88" cy="88" r="64" fill="none" stroke="hsl(var(--primary,160 45% 35%))" stroke-opacity=".15" stroke-width="2" stroke-dasharray="3 21" transform="rotate(-8 88 88)"/>
+    <g transform="translate(88,88) rotate(-50)">
+      <rect x="6" y="-2.5" width="40" height="5" rx="2.5" fill="hsl(var(--primary,160 45% 35%))"/>
+    </g>
+    <circle cx="88" cy="88" r="4.5" fill="hsl(var(--primary,160 45% 35%))"/>
+    <path d="M88 16
+             C 98 16, 110 24, 112 36
+             C 100 38, 90 32, 88 20
+             C 86 32, 76 38, 64 36
+             C 66 24, 78 16, 88 16 Z"
+          fill="hsl(var(--accent,45 85% 65%))"/>
+  </g>
+</svg>

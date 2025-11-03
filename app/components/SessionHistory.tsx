@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Clock } from 'lucide-react';
-import { TimerSession, Project } from '@/types';
+import type { TimerSession, Project } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 
 interface SessionHistoryProps {

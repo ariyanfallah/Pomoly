@@ -10,6 +10,15 @@ import { Timer as TimerIcon, BarChart3, History } from 'lucide-react';
 import { useTimer } from '@/hooks/useTimer';
 import { useSearchParams, useLoaderData, type LoaderFunctionArgs } from 'react-router';
 
+import { type MetaFunction } from "react-router";
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Pomolos" },
+    { name: "description", content: "Sessions that ship" },
+  ];
+};
+
 /* eslint-disable-next-line react-refresh/only-export-components */
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -67,23 +76,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
-                P
-              </div>
-              <h1 className="text-xl font-semibold">Pomodoro Focus</h1>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Settings />
-            </div>
-          </div>
-        </div>
-      </header>
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

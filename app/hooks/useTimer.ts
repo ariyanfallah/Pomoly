@@ -1,27 +1,21 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { TimerState, SessionType, TimerSettings, TimerSession } from '@/types';
+import type { TimerState, SessionType, TimerSession } from '@/types';
 import { useLocalStorage } from './useLocalStorage';
-
-const defaultSettings: TimerSettings = {
-  focusDuration: 25,
-  shortBreakDuration: 5,
-  longBreakDuration: 15,
-  longBreakInterval: 4,
-};
+import { defaultTimerSettings, useTimerSettings } from './useTimerSettings';
 
 export function useTimer(initialProjectId: string | null = null) {
-  const [settings] = useLocalStorage<TimerSettings>('pomodoroSettings', defaultSettings);
   const [sessions, setSessions] = useLocalStorage<TimerSession[]>('pomodoroSessions', []);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [nextSessionType, setNextSessionType] = useState<SessionType>('focus');
-  
   const [timerState, setTimerState] = useState<TimerState>({
-    timeLeft: settings.focusDuration * 60,
+    timeLeft: defaultTimerSettings.focusDuration * 60,
     sessionType: 'focus',
     isRunning: false,
     currentProjectId: initialProjectId,
     completedFocusCount: 0,
   });
+  const activeProjectId = timerState.currentProjectId ?? null;
+  const { settings } = useTimerSettings({ projectId: activeProjectId });
 
   const intervalRef = useRef<number | null>(null);
 
@@ -37,6 +31,29 @@ export function useTimer(initialProjectId: string | null = null) {
         return settings.focusDuration * 60;
     }
   }, [settings]);
+
+  useEffect(() => {
+    setTimerState(prev => {
+      if (prev.isRunning) {
+        return prev;
+      }
+
+      let nextTimeLeft = prev.timeLeft;
+      switch (prev.sessionType) {
+        case 'focus':
+          nextTimeLeft = settings.focusDuration * 60;
+          break;
+        case 'shortBreak':
+          nextTimeLeft = settings.shortBreakDuration * 60;
+          break;
+        case 'longBreak':
+          nextTimeLeft = settings.longBreakDuration * 60;
+          break;
+      }
+
+      return { ...prev, timeLeft: nextTimeLeft };
+    });
+  }, [settings.focusDuration, settings.shortBreakDuration, settings.longBreakDuration]);
 
   const startTimer = useCallback(() => {
     if (intervalRef.current) return;

@@ -110,7 +110,7 @@ export function Settings() {
           <Card className="p-4 border-0 bg-accent-light/20">
             <div className="flex items-start gap-4">
               <div className="p-2 rounded-lg bg-accent-light">
-                <Coffee className="h-5 w-5 text-muted-foreground" />
+                <Coffee className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1 space-y-3">
                 <div>
@@ -151,7 +151,7 @@ export function Settings() {
           <Card className="p-4 border-0 bg-accent-light/20">
             <div className="flex items-start gap-4">
               <div className="p-2 rounded-lg  bg-accent-light">
-                <Moon className="h-5 w-5 text-muted-foreground" />
+                <Moon className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1 space-y-3">
                 <div>
@@ -192,7 +192,7 @@ export function Settings() {
           {/* Long Break Interval */}
           <div className="flex items-start gap-4">
             <div className="p-2 rounded-lg  bg-accent-light">
-              <RotateCcwSquare className="h-5 w-5 text-muted-foreground" />
+              <RotateCcwSquare className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1 space-y-3">
               <div>

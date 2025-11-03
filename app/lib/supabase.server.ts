@@ -1,7 +1,15 @@
 import { createServerClient, parseCookieHeader, serializeCookieHeader } from '@supabase/ssr'
 
 const getEnv = (keyA: string, keyB?: string) => {
-	return process.env[keyA] ?? (keyB ? process.env[keyB] : undefined)
+	const fromProcess = process.env[keyA] ?? (keyB ? process.env[keyB] : undefined)
+	if (fromProcess) return fromProcess
+	// Fallback to Vite's build-time env in SSR builds if runtime envs are not present
+	const viteEnv = (typeof import.meta !== 'undefined'
+		? (import.meta as unknown as { env?: Record<string, string> }).env
+		: undefined) as
+		| Record<string, string>
+		| undefined
+	return viteEnv?.[keyA] ?? (keyB ? viteEnv?.[keyB] : undefined)
 }
 
 const SUPABASE_URL = (getEnv('VITE_SUPABASE_URL', 'SUPABASE_URL') ?? '') as string

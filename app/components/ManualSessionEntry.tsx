@@ -11,8 +11,8 @@ import { format, set } from 'date-fns';
 import { CalendarIcon, Clock, Plus, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Project, SessionType } from '@/types';
-import { supabase } from '../integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useSessions } from '@/hooks/useSessions';
 
 interface ManualSessionEntryProps {
   projects: Project[];
@@ -23,8 +23,8 @@ export function ManualSessionEntry({ projects, onSessionAdded }: ManualSessionEn
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  
-  // Form state
+  const { createSession } = useSessions();
+
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [sessionType, setSessionType] = useState<SessionType>('focus');
   const [date, setDate] = useState<Date>(new Date());
@@ -36,7 +36,7 @@ export function ManualSessionEntry({ projects, onSessionAdded }: ManualSessionEn
     const start = new Date(`2000-01-01T${startTime}:00`);
     const end = new Date(`2000-01-01T${endTime}:00`);
     const diffMs = end.getTime() - start.getTime();
-    return Math.max(0, Math.floor(diffMs / 1000)); // Convert to seconds
+    return Math.max(0, Math.floor(diffMs / 1000));
   };
 
   const formatDuration = (seconds: number) => {
@@ -59,7 +59,7 @@ export function ManualSessionEntry({ projects, onSessionAdded }: ManualSessionEn
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedProject) {
       toast({
         title: 'Project Required',
@@ -82,17 +82,6 @@ export function ManualSessionEntry({ projects, onSessionAdded }: ManualSessionEn
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: 'Authentication Required',
-          description: 'Please log in to add manual sessions.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Create start and end timestamps
       const startDateTime = set(date, {
         hours: parseInt(startTime.split(':')[0]),
         minutes: parseInt(startTime.split(':')[1]),
@@ -107,26 +96,17 @@ export function ManualSessionEntry({ projects, onSessionAdded }: ManualSessionEn
         milliseconds: 0,
       });
 
-      const { error } = await supabase
-        .from('sessions')
-        .insert({
-          user_id: user.id,
-          project_id: selectedProject,
-          type: sessionType,
-          duration,
-          started_at: startDateTime.toISOString(),
-          completed_at: endDateTime.toISOString(),
-          is_manual: true,
-          notes: notes.trim() || null,
-        });
+      const session = await createSession({
+        projectId: selectedProject,
+        type: sessionType,
+        duration,
+        startedAt: startDateTime,
+        completedAt: endDateTime,
+        isManual: true,
+        notes: notes.trim() || null,
+      });
 
-      if (error) {
-        console.error('Error adding manual session:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to add session. Please try again.',
-          variant: 'destructive',
-        });
+      if (!session) {
         return;
       }
 
@@ -160,7 +140,7 @@ export function ManualSessionEntry({ projects, onSessionAdded }: ManualSessionEn
           Add Manual Session
         </Button>
       </DialogTrigger>
-      
+
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -170,7 +150,6 @@ export function ManualSessionEntry({ projects, onSessionAdded }: ManualSessionEn
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Project Selection */}
           <div className="space-y-2">
             <Label htmlFor="project">Project *</Label>
             <Select value={selectedProject} onValueChange={setSelectedProject}>
@@ -181,7 +160,7 @@ export function ManualSessionEntry({ projects, onSessionAdded }: ManualSessionEn
                 {projects.map((project) => (
                   <SelectItem key={project.id} value={project.id}>
                     <div className="flex items-center gap-2">
-                      <div 
+                      <div
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: project.color }}
                       />
@@ -193,12 +172,11 @@ export function ManualSessionEntry({ projects, onSessionAdded }: ManualSessionEn
             </Select>
           </div>
 
-          {/* Session Type */}
           <div className="space-y-2">
             <Label htmlFor="type">Session Type</Label>
             <Select value={sessionType} onValueChange={(value: SessionType) => setSessionType(value)}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select session type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="focus">Focus Session</SelectItem>
@@ -208,100 +186,85 @@ export function ManualSessionEntry({ projects, onSessionAdded }: ManualSessionEn
             </Select>
           </div>
 
-          {/* Date Selection */}
-          <div className="space-y-2">
-            <Label>Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(newDate) => newDate && setDate(newDate)}
-                  initialFocus
-                  className="pointer-events-auto"
-                  disabled={(date) => date > new Date()}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Time Range */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="start-time">Start Time</Label>
+              <Label>Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      'w-full justify-start text-left font-normal',
+                      !date && 'text-muted-foreground'
+                    )}
+                    type="button"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, 'PPP') : 'Pick a date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(newDate) => newDate && setDate(newDate)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="start">Start Time</Label>
               <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="start-time"
+                  id="start"
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="pl-10"
+                  className="pl-9"
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="end-time">End Time</Label>
+              <Label htmlFor="end">End Time</Label>
               <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="end-time"
+                  id="end"
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="pl-10"
+                  className="pl-9"
                 />
               </div>
             </div>
           </div>
 
-          {/* Duration Display */}
-          {duration > 0 && (
-            <div className="bg-secondary/50 rounded-lg p-3 text-center">
-              <div className="text-sm text-muted-foreground">Duration</div>
-              <div className="text-lg font-semibold text-foreground">
-                {formatDuration(duration)}
-              </div>
-            </div>
-          )}
-
-          {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
+            <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
-              placeholder="What did you work on during this session?"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add any notes about this session"
               rows={3}
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsOpen(false)}
-              disabled={loading}
-            >
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Duration</span>
+            <span>{formatDuration(duration)}</span>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsOpen(false)} type="button">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || duration <= 0}>
-              {loading ? 'Adding...' : 'Add Session'}
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Saving...' : 'Save Session'}
             </Button>
           </div>
         </form>

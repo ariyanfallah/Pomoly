@@ -11,6 +11,9 @@ export interface TimerSession {
   type: SessionType;
   duration: number; // in seconds
   completedAt: Date;
+  startedAt?: Date | null;
+  isManual?: boolean;
+  notes?: string | null;
 }
 
 export type SessionType = 'focus' | 'shortBreak' | 'longBreak';

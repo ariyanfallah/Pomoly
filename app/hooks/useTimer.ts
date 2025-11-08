@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { TimerState, SessionType, TimerSession } from '@/types';
-import { useLocalStorage } from './useLocalStorage';
-import { defaultTimerSettings, useTimerSettings } from './useTimerSettings';
+import type { TimerState, SessionType } from '@/types';
+import { useTimerSettings, defaultTimerSettings } from './useTimerSettings';
+import { useData } from '@/contexts/DataContext';
 
 export function useTimer(initialProjectId: string | null = null) {
-  const [sessions, setSessions] = useLocalStorage<TimerSession[]>('pomodoroSessions', []);
+  const { addSession } = useData();
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [nextSessionType, setNextSessionType] = useState<SessionType>('focus');
   const [timerState, setTimerState] = useState<TimerState>({
@@ -55,54 +55,60 @@ export function useTimer(initialProjectId: string | null = null) {
     });
   }, [settings.focusDuration, settings.shortBreakDuration, settings.longBreakDuration]);
 
+  const handleSessionComplete = useCallback((state: TimerState) => {
+    if (state.sessionType === 'focus' && state.currentProjectId) {
+      const duration = getSessionDuration(state.sessionType);
+      const completedAt = new Date();
+      const startedAt = new Date(completedAt.getTime() - duration * 1000);
+      addSession({
+        projectId: state.currentProjectId,
+        type: state.sessionType,
+        duration,
+        completedAt,
+        startedAt,
+        isManual: false,
+        notes: null,
+      });
+    }
+
+    const newCompletedCount = state.sessionType === 'focus'
+      ? state.completedFocusCount + 1
+      : state.completedFocusCount;
+
+    let nextSession: SessionType = 'focus';
+    if (state.sessionType === 'focus') {
+      nextSession = newCompletedCount % settings.longBreakInterval === 0
+        ? 'longBreak'
+        : 'shortBreak';
+    }
+
+    setNextSessionType(nextSession);
+    setShowCompleteModal(true);
+
+    return newCompletedCount;
+  }, [addSession, getSessionDuration, settings.longBreakInterval]);
+
   const startTimer = useCallback(() => {
     if (intervalRef.current) return;
 
     setTimerState(prev => ({ ...prev, isRunning: true }));
-    
+
     intervalRef.current = window.setInterval(() => {
       setTimerState(prev => {
         if (prev.timeLeft <= 1) {
-          // Session completed
-          if (prev.sessionType === 'focus' && prev.currentProjectId) {
-            const newSession = {
-              id: Date.now().toString(),
-              projectId: prev.currentProjectId,
-              type: prev.sessionType,
-              duration: getSessionDuration(prev.sessionType),
-              completedAt: new Date(),
-            };
-            setSessions((prevSessions: TimerSession[]) => [...prevSessions, newSession]);
-          }
-
-          const newCompletedCount = prev.sessionType === 'focus' 
-            ? prev.completedFocusCount + 1 
-            : prev.completedFocusCount;
-
-          // Determine next session type
-          let nextSession: SessionType = 'focus';
-          if (prev.sessionType === 'focus') {
-            nextSession = newCompletedCount % settings.longBreakInterval === 0 
-              ? 'longBreak' 
-              : 'shortBreak';
-          }
-
-          // Show completion modal and store next session
-          setNextSessionType(nextSession);
-          setShowCompleteModal(true);
-
+          const completedCount = handleSessionComplete(prev);
           return {
             ...prev,
             timeLeft: 0,
             isRunning: false,
-            completedFocusCount: newCompletedCount,
+            completedFocusCount: completedCount,
           };
         }
 
         return { ...prev, timeLeft: prev.timeLeft - 1 };
       });
     }, 1000);
-  }, [getSessionDuration, setSessions, settings.longBreakInterval]);
+  }, [handleSessionComplete]);
 
   const pauseTimer = useCallback(() => {
     if (intervalRef.current) {
@@ -147,55 +153,28 @@ export function useTimer(initialProjectId: string | null = null) {
       isRunning: true,
     }));
     setShowCompleteModal(false);
-    
-    // Start the timer for the next session
+
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    
+
     intervalRef.current = window.setInterval(() => {
       setTimerState(prev => {
         if (prev.timeLeft <= 1) {
-          // Session completed - same logic as before
-          if (prev.sessionType === 'focus' && prev.currentProjectId) {
-            const newSession = {
-              id: Date.now().toString(),
-              projectId: prev.currentProjectId,
-              type: prev.sessionType,
-              duration: getSessionDuration(prev.sessionType),
-              completedAt: new Date(),
-            };
-            setSessions((prevSessions: TimerSession[]) => [...prevSessions, newSession]);
-          }
-
-          const newCompletedCount = prev.sessionType === 'focus' 
-            ? prev.completedFocusCount + 1 
-            : prev.completedFocusCount;
-
-          let nextSession: SessionType = 'focus';
-          if (prev.sessionType === 'focus') {
-            nextSession = newCompletedCount % settings.longBreakInterval === 0 
-              ? 'longBreak' 
-              : 'shortBreak';
-          }
-
-          setNextSessionType(nextSession);
-          setShowCompleteModal(true);
-
+          const completedCount = handleSessionComplete(prev);
           return {
             ...prev,
             timeLeft: 0,
             isRunning: false,
-            completedFocusCount: newCompletedCount,
+            completedFocusCount: completedCount,
           };
         }
 
         return { ...prev, timeLeft: prev.timeLeft - 1 };
       });
     }, 1000);
-  }, [nextSessionType, getSessionDuration, setSessions, settings.longBreakInterval]);
+  }, [getSessionDuration, handleSessionComplete, nextSessionType]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (intervalRef.current) {

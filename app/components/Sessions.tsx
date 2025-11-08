@@ -3,15 +3,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ManualSessionEntry } from '@/components/ManualSessionEntry';
 import { Clock, Target, Coffee, Calendar, Trash2, Edit3 } from 'lucide-react';
-import { format, parseISO, startOfDay } from 'date-fns';
-import { useSessions, type DatabaseSession } from '@/hooks/useSessions';
+import { format, startOfDay } from 'date-fns';
+import { useSessions } from '@/hooks/useSessions';
 import { useProjects } from '@/hooks/useProjects';
 import type { SessionType } from '@/types';
 import { cn } from '@/lib/utils';
 
 export function Sessions() {
-  const { sessions, loading, deleteSession, refetch } = useSessions();
-  const { projects, loading: projectsLoading } = useProjects();
+  const { sessions, deleteSession } = useSessions();
+  const { projects } = useProjects();
 
   const getSessionIcon = (type: SessionType) => {
     switch (type) {
@@ -60,42 +60,25 @@ export function Sessions() {
     }
   };
 
-  // Group sessions by date
   const groupedSessions = sessions.reduce((groups, session) => {
-    const date = startOfDay(parseISO(session.completed_at));
+    const completedAt = new Date(session.completedAt);
+    const date = startOfDay(completedAt);
     const dateKey = date.toISOString();
-    
+
     if (!groups[dateKey]) {
       groups[dateKey] = {
         date,
         sessions: [],
       };
     }
-    
+
     groups[dateKey].sessions.push(session);
     return groups;
-  }, {} as Record<string, { date: Date; sessions: DatabaseSession[] }>);
+  }, {} as Record<string, { date: Date; sessions: typeof sessions }>);
 
-  const sortedGroups = Object.values(groupedSessions).sort((a, b) => 
+  const sortedGroups = Object.values(groupedSessions).sort((a, b) =>
     b.date.getTime() - a.date.getTime()
   );
-
-  if (loading || projectsLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold text-foreground">Session History</h2>
-            <p className="text-muted-foreground">Track your completed work sessions</p>
-          </div>
-        </div>
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground mt-2">Loading sessions...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (sessions.length === 0) {
     return (
@@ -106,13 +89,12 @@ export function Sessions() {
             <p className="text-muted-foreground">Track your completed work sessions</p>
           </div>
           {projects.length > 0 && (
-            <ManualSessionEntry 
-              projects={projects} 
-              onSessionAdded={refetch}
+            <ManualSessionEntry
+              projects={projects}
             />
           )}
         </div>
-        
+
         <Card className="text-center py-12">
           <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
             <Clock className="h-8 w-8 text-muted-foreground" />
@@ -139,21 +121,18 @@ export function Sessions() {
           <p className="text-muted-foreground">Track your completed work sessions</p>
         </div>
         {projects.length > 0 && (
-          <ManualSessionEntry 
-            projects={projects} 
-            onSessionAdded={refetch}
+          <ManualSessionEntry
+            projects={projects}
           />
         )}
       </div>
 
       <div className="relative">
-        {/* Timeline line */}
         <div className="absolute left-8 top-6 bottom-0 w-0.5 bg-gradient-to-b from-primary/40 via-border to-transparent"></div>
-        
+
         <div className="space-y-8">
           {sortedGroups.map((group, groupIndex) => (
             <div key={group.date.toISOString()} className="relative">
-              {/* Date node */}
               <div className="flex items-center gap-4 mb-4">
                 <div className="relative z-10 w-16 h-16 rounded-full bg-card border-2 border-primary/20 flex items-center justify-center shadow-soft animate-fade-in">
                   <Calendar className="h-6 w-6 text-primary" />
@@ -168,25 +147,28 @@ export function Sessions() {
                 </div>
               </div>
 
-              {/* Session cards */}
               <div className="ml-20 space-y-3">
                 {group.sessions.map((session, sessionIndex) => {
                   const SessionIcon = getSessionIcon(session.type);
-                  const project = projects.find(p => p.id === session.project_id) || session.projects;
-                  
+                  const project = projects.find(p => p.id === session.projectId);
+                  const startedAt = session.startedAt
+                    ? new Date(session.startedAt)
+                    : new Date(new Date(session.completedAt).getTime() - session.duration * 1000);
+                  const completedAt = new Date(session.completedAt);
+
                   return (
-                    <Card 
+                    <Card
                       key={session.id}
                       className={cn(
                         "p-4 shadow-soft border-l-4 hover:shadow-md transition-shadow animate-fade-in hover-scale",
-                        session.type === 'focus' 
-                          ? 'border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20' 
+                        session.type === 'focus'
+                          ? 'border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20'
                           : session.type === 'shortBreak'
                           ? 'border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20'
                           : 'border-l-purple-500 bg-purple-50/50 dark:bg-purple-950/20'
                       )}
-                      style={{ 
-                        animationDelay: `${(groupIndex * 100) + (sessionIndex * 50)}ms` 
+                      style={{
+                        animationDelay: `${(groupIndex * 100) + (sessionIndex * 50)}ms`
                       }}
                     >
                       <div className="flex items-start justify-between">
@@ -197,23 +179,23 @@ export function Sessions() {
                           )}>
                             <SessionIcon className="h-5 w-5" />
                           </div>
-                          
+
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant="outline" className={getSessionColor(session.type)}>
                                 {formatSessionType(session.type)}
                               </Badge>
-                              {session.is_manual && (
+                              {session.isManual && (
                                 <Badge variant="secondary" className="text-xs">
                                   <Edit3 className="h-3 w-3 mr-1" />
                                   Manual
                                 </Badge>
                               )}
                             </div>
-                            
+
                             {project && (
                               <div className="flex items-center gap-2 mb-2">
-                                <div 
+                                <div
                                   className="w-3 h-3 rounded-full"
                                   style={{ backgroundColor: project.color }}
                                 />
@@ -222,18 +204,18 @@ export function Sessions() {
                                 </span>
                               </div>
                             )}
-                            
+
                             <div className="text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
                                 <span>{formatDuration(session.duration)}</span>
                                 <span className="mx-2">•</span>
                                 <span>
-                                  {format(parseISO(session.started_at), 'h:mm a')} - {format(parseISO(session.completed_at), 'h:mm a')}
+                                  {format(startedAt, 'h:mm a')} - {format(completedAt, 'h:mm a')}
                                 </span>
                               </div>
                             </div>
-                            
+
                             {session.notes && (
                               <p className="text-sm text-muted-foreground mt-2 italic">
                                 "{session.notes}"
@@ -241,8 +223,8 @@ export function Sessions() {
                             )}
                           </div>
                         </div>
-                        
-                        {session.is_manual && (
+
+                        {session.isManual && (
                           <Button
                             variant="ghost"
                             size="sm"

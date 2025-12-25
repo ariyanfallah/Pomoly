@@ -16,7 +16,7 @@ type AuthActionData = {
 export const meta: MetaFunction = () => {
   return [
     {
-      title: `Sign In | ${brandConfig.brandName}`,
+      title: `Authentication | ${brandConfig.brandName}`,
     },
     {
       name: "description",

@@ -7,6 +7,7 @@ export default [
     layout('routes/__boundary.tsx', [
       layout('routes/__boundary/__public.tsx', [
         route('auth', 'routes/__boundary/__public/auth.tsx'),
+        route('auth/callback', 'routes/__boundary/__public/auth.callback.tsx'),
       ]),
 
       layout('routes/__boundary/__private.tsx', [

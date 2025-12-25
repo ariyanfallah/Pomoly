@@ -83,13 +83,20 @@ export async function action({ request }: Route.ActionArgs) {
   if (intent === 'signup') {
     const email = String(formData.get('email') ?? '')
     const password = String(formData.get('password') ?? '')
+    const origin = new URL(request.url).origin
     if (password.length < 6) {
       return new Response(
         JSON.stringify({ intent: 'signup', error: 'Password must be at least 6 characters long' }),
         { headers: { ...Object.fromEntries(headers), 'Content-Type': 'application/json' }, status: 400 }
       )
     }
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${origin}/auth/callback`,
+      },
+    })
     if (error) {
       return new Response(
         JSON.stringify({ intent: 'signup', error: error.message }),

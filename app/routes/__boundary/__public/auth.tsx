@@ -70,7 +70,7 @@ export default function Auth() {
     }
   }, [actionData?.intent])
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-start justify-center pt-16">
       <div className="max-w-md w-full space-y-8 p-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">Welcome to <span className="text-primary">{brandConfig.brandName}!</span></h2>
@@ -79,7 +79,7 @@ export default function Auth() {
           </p>
         </div>
         
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mt-8">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Sign In</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>

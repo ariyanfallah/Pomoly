@@ -118,7 +118,7 @@ export function SignUpForm({ error, success }: { error?: string | null; success?
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full !mt-8" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create Account
           </Button>

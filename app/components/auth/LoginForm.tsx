@@ -5,7 +5,7 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { Alert, AlertDescription } from '../ui/alert'
-import { Loader2 } from 'lucide-react'
+import { Loader2, AlertCircle } from 'lucide-react'
 
 export function LoginForm({ error }: { error?: string | null }) {
   const [email, setEmail] = useState('')
@@ -26,6 +26,7 @@ export function LoginForm({ error }: { error?: string | null }) {
           <input type="hidden" name="intent" value="login" />
           {error ? (
             <Alert variant="destructive">
+              <AlertCircle className="h-5 w-5" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}

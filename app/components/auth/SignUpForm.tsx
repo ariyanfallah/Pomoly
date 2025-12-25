@@ -5,12 +5,13 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { Alert, AlertDescription } from '../ui/alert'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Mail, AlertCircle } from 'lucide-react'
 
 export function SignUpForm({ error, success }: { error?: string | null; success?: string | null }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordMismatch, setPasswordMismatch] = useState(false)
   const navigation = useNavigation()
   const loading = navigation.state === 'submitting'
 
@@ -22,8 +23,23 @@ export function SignUpForm({ error, success }: { error?: string | null; success?
     const cpwd = String(formData.get('confirmPassword') ?? '')
     if (pwd !== cpwd) {
       e.preventDefault()
-      alert('Passwords do not match')
+      setPasswordMismatch(true)
       return
+    }
+    setPasswordMismatch(false)
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value)
+    if (passwordMismatch && e.target.value === confirmPassword) {
+      setPasswordMismatch(false)
+    }
+  }
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setConfirmPassword(e.target.value)
+    if (passwordMismatch && e.target.value === password) {
+      setPasswordMismatch(false)
     }
   }
 
@@ -36,17 +52,21 @@ export function SignUpForm({ error, success }: { error?: string | null; success?
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {success ? (
+          <Alert variant="success" className="mb-6">
+            <Mail className="h-5 w-5" />
+            <AlertDescription className="font-medium">
+              {success}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        
         <form method="post" onSubmit={handleSubmit} className="space-y-4">
           <input type="hidden" name="intent" value="signup" />
           {error ? (
             <Alert variant="destructive">
+              <AlertCircle className="h-5 w-5" />
               <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ) : null}
-          
-          {success ? (
-            <Alert>
-              <AlertDescription>{success}</AlertDescription>
             </Alert>
           ) : null}
           
@@ -71,7 +91,7 @@ export function SignUpForm({ error, success }: { error?: string | null; success?
               type="password"
               name="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               placeholder="Enter your password"
               required
               disabled={loading}
@@ -85,11 +105,17 @@ export function SignUpForm({ error, success }: { error?: string | null; success?
               type="password"
               name="confirmPassword"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={handleConfirmPasswordChange}
               placeholder="Confirm your password"
               required
               disabled={loading}
+              className={passwordMismatch ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {passwordMismatch && (
+              <p className="text-sm text-destructive mt-1">
+                Passwords do not match
+              </p>
+            )}
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>

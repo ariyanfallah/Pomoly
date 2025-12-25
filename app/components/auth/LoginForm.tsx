@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigation } from 'react-router'
+import { useNavigation, Link } from 'react-router'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
@@ -46,7 +46,15 @@ export function LoginForm({ error }: { error?: string | null }) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link
+                to="/auth/forgot-password"
+                className="text-sm text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <Input
               id="password"
               type="password"

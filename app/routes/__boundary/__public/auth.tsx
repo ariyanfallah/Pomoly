@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { LoginForm } from "../../../components/auth/LoginForm";
 import { SignUpForm } from "../../../components/auth/SignUpForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
-import { useActionData, redirect } from "react-router";
+import { useActionData, redirect, type MetaFunction } from "react-router";
 import type { Route } from "../../../+types/root";
 import { createSupabaseServerClient } from "../../../lib/supabase.server";
 import { brandConfig } from "~/configs/brand.config";
@@ -12,6 +12,46 @@ type AuthActionData = {
   error?: string | null
   success?: string | null
 } | undefined
+
+export const meta: MetaFunction = () => {
+  return [
+    {
+      title: `Sign In | ${brandConfig.brandName}`,
+    },
+    {
+      name: "description",
+      content: `Sign in to your ${brandConfig.brandName} account or create a new one to start tracking your productivity sessions.`,
+    },
+    {
+      name: "keywords",
+      content: "sign in, login, sign up, authentication, pomodoro, productivity, timer",
+    },
+    {
+      property: "og:title",
+      content: `Sign In | ${brandConfig.brandName}`,
+    },
+    {
+      property: "og:description",
+      content: `Sign in to your ${brandConfig.brandName} account or create a new one to start tracking your productivity sessions.`,
+    },
+    {
+      property: "og:type",
+      content: "website",
+    },
+    {
+      name: "twitter:card",
+      content: "summary",
+    },
+    {
+      name: "twitter:title",
+      content: `Sign In | ${brandConfig.brandName}`,
+    },
+    {
+      name: "twitter:description",
+      content: `Sign in to your ${brandConfig.brandName} account or create a new one to start tracking your productivity sessions.`,
+    },
+  ];
+};
 
 export default function Auth() {
   const actionData = useActionData() as AuthActionData

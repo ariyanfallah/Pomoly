@@ -8,36 +8,37 @@ import {
   useRouteError,
   type MetaFunction,
 } from 'react-router';
+import { brandConfig } from '~/configs/brand.config';
 
 // Constants for better maintainability
 const ERROR_MESSAGES = {
   401: {
-    title: 'احراز هویت مورد نیاز',
-    message: 'برای دسترسی به این صفحه باید وارد شوید.',
+    title: 'Authentication Required',
+    message: 'You must be logged in to access this page.',
   },
   403: {
-    title: 'دسترسی ممنوع',
-    message: 'شما اجازه دسترسی به این منبع را ندارید.',
+    title: 'Access Forbidden',
+    message: 'You are not allowed to access this resource.',
   },
   404: {
-    title: 'صفحه یافت نشد',
-    message: 'صفحه‌ای که به دنبال آن هستید وجود ندارد یا منتقل شده است.',
+    title: 'Page Not Found',
+    message: 'The page you are looking for does not exist or has been moved.',
   },
   500: {
-    title: 'خطای سرور',
-    message: 'مشکلی از سمت ما پیش آمده است. در حال رفع آن هستیم.',
+    title: 'Server Error',
+    message: 'An error occurred while processing your request. We are investigating the issue.',
   },
   default: {
-    title: 'مشکلی پیش آمد',
-    message: 'خطای غیرمنتظره‌ای رخ داده است.',
+    title: 'An unexpected error occurred',
+    message: 'An unexpected error occurred. Please try again later.',
   },
   application: {
-    title: 'خطای برنامه',
-    message: 'خطای غیرمنتظره‌ای رخ داده است. لطفاً صفحه را تازه‌سازی کنید.',
+    title: 'Application Error',
+    message: 'An unexpected error occurred. Please try again later.',
   },
   unknown: {
-    title: 'خطای نامشخص',
-    message: 'خطای غیرمنتظره‌ای رخ داده است. لطفاً صفحه را تازه‌سازی کنید.',
+    title: 'Unknown Error',
+    message: 'An unexpected error occurred. Please try again later.',
   },
 } as const;
 
@@ -50,11 +51,11 @@ export const meta: MetaFunction = (args) => {
 
   return [
     {
-      title: `${statusCode ? `${statusCode} - ` : ''}خطا - اکادمی آموزش آنلاین`,
+      title: `${statusCode ? `${statusCode} - ` : ''}Error - ${brandConfig.brandName}`,
     },
     {
       name: 'description',
-      content: 'یک خطای رخ داده است در حال بررسی آن هستیم',
+      content: 'An error occurred while processing your request. We are investigating the issue.',
     },
     // Prevent indexing of error pages
     { name: 'robots', content: 'noindex, nofollow' },
@@ -76,11 +77,11 @@ const RetryButton = ({ onRetry, isRetrying }: { onRetry: () => void; isRetrying:
     type="button"
     onClick={onRetry}
     disabled={isRetrying}
-    aria-label={isRetrying ? 'دوباره تلاش کنید...' : 'دوباره تلاش کنید'}
+    aria-label={isRetrying ? 'Try again' : 'Try again'}
     className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
   >
     <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} aria-hidden="true" />
-    {isRetrying ? 'دوباره تلاش کنید...' : 'دوباره تلاش کنید'}
+    {isRetrying ? 'Try again' : 'Try again'}
   </button>
 );
 
@@ -88,22 +89,22 @@ const BackButton = ({ onGoBack }: { onGoBack: () => void }) => (
   <button
     type="button"
     onClick={onGoBack}
-    aria-label="بازگشت به صفحه قبل"
+    aria-label="Go back to the previous page"
     className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors"
   >
     <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-    بازگشت
+    Go back
   </button>
 );
 
 const HomeButton = () => (
   <Link
     to="/"
-    aria-label="بازگشت به صفحه اصلی"
+    aria-label="Go back to the home page"
     className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors"
   >
     <Home className="h-4 w-4" aria-hidden="true" />
-    بازگشت به صفحه اصلی
+    Go back to the home page
   </Link>
 );
 
